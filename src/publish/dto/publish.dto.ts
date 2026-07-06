@@ -1,11 +1,13 @@
 import { Transform } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsObject, IsString } from 'class-validator';
+import { EventPayload } from '../../events/event-payload';
+import { normalizeTopic } from '../../events/topics';
 
-export class PublishDto {
+export class PublishDto implements EventPayload {
   @IsString()
   @IsNotEmpty()
   @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim().toLowerCase() : value,
+    typeof value === 'string' ? normalizeTopic(value) : value,
   )
   topic: string;
 

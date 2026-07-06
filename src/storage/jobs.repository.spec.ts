@@ -1,27 +1,23 @@
 import { JobsRepository } from './jobs.repository';
 import { StorageService } from './storage.service';
+import { createInMemoryStorage, jobStatus, payloadOf } from './testing';
 
 describe('JobsRepository', () => {
   let storage: StorageService;
   let repository: JobsRepository;
 
   beforeEach(() => {
-    process.env.BEACON_DB_PATH = ':memory:';
-    storage = new StorageService();
+    storage = createInMemoryStorage();
     repository = new JobsRepository(storage);
   });
 
   afterEach(() => {
     storage.onModuleDestroy();
-    delete process.env.BEACON_DB_PATH;
   });
 
   it('inserts a job as queued with serialized payload', () => {
-    repository.insert({
-      id: 'evt-1',
-      topic: 'orders.created',
-      payload: { topic: 'orders.created', source: 'api', data: { id: 1 } },
-    });
+    const payload = payloadOf({ data: { id: 1 } });
+    repository.insert({ id: 'evt-1', topic: payload.topic, payload });
 
     const row = storage.db
       .prepare('SELECT * FROM jobs WHERE id = ?')
@@ -29,15 +25,11 @@ describe('JobsRepository', () => {
 
     expect(row.topic).toBe('orders.created');
     expect(row.status).toBe('queued');
-    expect(JSON.parse(row.payload as string)).toEqual({
-      topic: 'orders.created',
-      source: 'api',
-      data: { id: 1 },
-    });
+    expect(JSON.parse(row.payload as string)).toEqual(payload);
   });
 
   it('rejects duplicate ids', () => {
-    const job = { id: 'evt-1', topic: 'a', payload: {} };
+    const job = { id: 'evt-1', topic: 'a', payload: payloadOf() };
     repository.insert(job);
 
     expect(() => repository.insert(job)).toThrow(/UNIQUE/);
@@ -45,22 +37,22 @@ describe('JobsRepository', () => {
 
   describe('claimNext', () => {
     it('claims the oldest queued job, marking it processing', () => {
-      repository.insert({ id: 'evt-1', topic: 'a', payload: { n: 1 } });
-      repository.insert({ id: 'evt-2', topic: 'b', payload: { n: 2 } });
+      repository.insert({ id: 'evt-1', topic: 'a', payload: payloadOf() });
+      repository.insert({ id: 'evt-2', topic: 'b', payload: payloadOf() });
 
       const job = repository.claimNext();
 
       expect(job).toMatchObject({
         id: 'evt-1',
         topic: 'a',
-        payload: { n: 1 },
+        payload: payloadOf(),
         status: 'processing',
         attempts: 1,
       });
     });
 
     it('does not claim the same job twice', () => {
-      repository.insert({ id: 'evt-1', topic: 'a', payload: {} });
+      repository.insert({ id: 'evt-1', topic: 'a', payload: payloadOf() });
 
       expect(repository.claimNext()?.id).toBe('evt-1');
       expect(repository.claimNext()).toBeUndefined();
@@ -72,31 +64,24 @@ describe('JobsRepository', () => {
   });
 
   describe('status transitions', () => {
-    function statusOf(id: string) {
-      const row = storage.db
-        .prepare('SELECT status FROM jobs WHERE id = ?')
-        .get(id) as { status: string };
-      return row.status;
-    }
-
     beforeEach(() => {
-      repository.insert({ id: 'evt-1', topic: 'a', payload: {} });
+      repository.insert({ id: 'evt-1', topic: 'a', payload: payloadOf() });
       repository.claimNext();
     });
 
     it('markDone sets done', () => {
       repository.markDone('evt-1');
-      expect(statusOf('evt-1')).toBe('done');
+      expect(jobStatus(storage, 'evt-1').status).toBe('done');
     });
 
     it('markFailed sets failed', () => {
       repository.markFailed('evt-1');
-      expect(statusOf('evt-1')).toBe('failed');
+      expect(jobStatus(storage, 'evt-1').status).toBe('failed');
     });
 
     it('requeue makes the job claimable again, keeping attempts', () => {
       repository.requeue('evt-1');
-      expect(statusOf('evt-1')).toBe('queued');
+      expect(jobStatus(storage, 'evt-1').status).toBe('queued');
 
       const reclaimed = repository.claimNext();
       expect(reclaimed?.id).toBe('evt-1');
@@ -105,7 +90,7 @@ describe('JobsRepository', () => {
 
     it('requeue with delay keeps the job unavailable until it matures', () => {
       repository.requeue('evt-1', 60);
-      expect(statusOf('evt-1')).toBe('queued');
+      expect(jobStatus(storage, 'evt-1').status).toBe('queued');
 
       expect(repository.claimNext()).toBeUndefined();
     });

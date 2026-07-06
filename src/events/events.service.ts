@@ -1,27 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { filter, Observable, Subject } from 'rxjs';
+import { EventPayload } from './event-payload';
+import { matchesTopic } from './topics';
 
-export interface BeaconEvent {
+export interface BeaconEvent extends EventPayload {
   eventId: string;
-  topic: string;
-  source: string;
-  data: Record<string, any>;
-  persist: boolean;
-}
-
-export function matchesTopic(topic: string, pattern: string): boolean {
-  if (pattern === '**') {
-    return true;
-  }
-  const regex = pattern
-    .split('.')
-    .map((segment) => {
-      if (segment === '**') return '.*';
-      if (segment === '*') return '[^.]+';
-      return segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    })
-    .join('\\.');
-  return new RegExp(`^${regex}$`).test(topic);
 }
 
 @Injectable()

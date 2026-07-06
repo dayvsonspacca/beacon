@@ -1,4 +1,11 @@
-import { EventsService, matchesTopic } from './events.service';
+import { EventsService } from './events.service';
+import { matchesTopic, normalizeTopic } from './topics';
+
+describe('normalizeTopic', () => {
+  it('trims and lowercases', () => {
+    expect(normalizeTopic('  Orders.CREATED ')).toBe('orders.created');
+  });
+});
 
 describe('matchesTopic', () => {
   it.each([

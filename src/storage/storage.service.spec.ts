@@ -1,16 +1,15 @@
 import { StorageService } from './storage.service';
+import { createInMemoryStorage } from './testing';
 
 describe('StorageService', () => {
   let service: StorageService;
 
   beforeEach(() => {
-    process.env.BEACON_DB_PATH = ':memory:';
-    service = new StorageService();
+    service = createInMemoryStorage();
   });
 
   afterEach(() => {
     service.onModuleDestroy();
-    delete process.env.BEACON_DB_PATH;
   });
 
   it('creates the jobs table', () => {
