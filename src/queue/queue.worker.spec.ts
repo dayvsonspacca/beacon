@@ -1,3 +1,4 @@
+import { BeaconEvent, EventsService } from '../events/events.service';
 import { JobsRepository } from '../storage/jobs.repository';
 import { StorageService } from '../storage/storage.service';
 import { QueueWorker } from './queue.worker';
@@ -5,13 +6,15 @@ import { QueueWorker } from './queue.worker';
 describe('QueueWorker', () => {
   let storage: StorageService;
   let repository: JobsRepository;
+  let events: EventsService;
   let worker: QueueWorker;
 
   beforeEach(() => {
     process.env.BEACON_DB_PATH = ':memory:';
     storage = new StorageService();
     repository = new JobsRepository(storage);
-    worker = new QueueWorker(repository);
+    events = new EventsService();
+    worker = new QueueWorker(repository, events);
   });
 
   afterEach(() => {
@@ -34,6 +37,33 @@ describe('QueueWorker', () => {
 
     expect(statusOf('evt-1')).toEqual({ status: 'done', attempts: 1 });
     expect(statusOf('evt-2')).toEqual({ status: 'done', attempts: 1 });
+  });
+
+  it('emits the event to subscribers when processing', () => {
+    const received: BeaconEvent[] = [];
+    events.stream('orders.*').subscribe((event) => received.push(event));
+
+    repository.insert({
+      id: 'evt-1',
+      topic: 'orders.created',
+      payload: {
+        topic: 'orders.created',
+        source: 'api',
+        data: { orderId: 1 },
+        persist: false,
+      },
+    });
+    worker.drain();
+
+    expect(received).toEqual([
+      {
+        eventId: 'evt-1',
+        topic: 'orders.created',
+        source: 'api',
+        data: { orderId: 1 },
+        persist: false,
+      },
+    ]);
   });
 
   it('requeues a failing job with backoff and marks it failed after max attempts', () => {

@@ -4,6 +4,7 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
+import { BeaconEvent, EventsService } from '../events/events.service';
 import { Job, JobsRepository } from '../storage/jobs.repository';
 
 const POLL_INTERVAL_MS = 500;
@@ -15,7 +16,10 @@ export class QueueWorker implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(QueueWorker.name);
   private timer?: NodeJS.Timeout;
 
-  constructor(private readonly jobs: JobsRepository) {}
+  constructor(
+    private readonly jobs: JobsRepository,
+    private readonly events: EventsService,
+  ) {}
 
   onModuleInit(): void {
     this.timer = setInterval(() => this.drain(), POLL_INTERVAL_MS);
@@ -50,6 +54,7 @@ export class QueueWorker implements OnModuleInit, OnModuleDestroy {
   }
 
   private process(job: Job): void {
-    this.logger.log(`processed ${job.id} (topic=${job.topic})`);
+    this.events.emit({ eventId: job.id, ...job.payload } as BeaconEvent);
+    this.logger.log(`delivered ${job.id} (topic=${job.topic})`);
   }
 }
