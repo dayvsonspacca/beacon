@@ -1,7 +1,11 @@
 import { BeaconEvent, EventsService } from '../events/events.service';
 import { JobsRepository } from '../storage/jobs.repository';
 import { StorageService } from '../storage/storage.service';
-import { createInMemoryStorage, jobStatus, payloadOf } from '../storage/testing';
+import {
+  createInMemoryStorage,
+  jobStatus,
+  payloadOf,
+} from '../storage/testing';
 import { QueueWorker } from './queue.worker';
 
 describe('QueueWorker', () => {
@@ -27,8 +31,14 @@ describe('QueueWorker', () => {
 
     worker.drain();
 
-    expect(jobStatus(storage, 'evt-1')).toEqual({ status: 'done', attempts: 1 });
-    expect(jobStatus(storage, 'evt-2')).toEqual({ status: 'done', attempts: 1 });
+    expect(jobStatus(storage, 'evt-1')).toEqual({
+      status: 'done',
+      attempts: 1,
+    });
+    expect(jobStatus(storage, 'evt-2')).toEqual({
+      status: 'done',
+      attempts: 1,
+    });
   });
 
   it('emits the event to subscribers when processing', () => {
@@ -59,18 +69,30 @@ describe('QueueWorker', () => {
         .run();
 
     worker.drain();
-    expect(jobStatus(storage, 'evt-1')).toEqual({ status: 'queued', attempts: 1 });
+    expect(jobStatus(storage, 'evt-1')).toEqual({
+      status: 'queued',
+      attempts: 1,
+    });
 
     // backoff: not claimable again within the same drain pass
     worker.drain();
-    expect(jobStatus(storage, 'evt-1')).toEqual({ status: 'queued', attempts: 1 });
+    expect(jobStatus(storage, 'evt-1')).toEqual({
+      status: 'queued',
+      attempts: 1,
+    });
 
     matureJob();
     worker.drain();
-    expect(jobStatus(storage, 'evt-1')).toEqual({ status: 'queued', attempts: 2 });
+    expect(jobStatus(storage, 'evt-1')).toEqual({
+      status: 'queued',
+      attempts: 2,
+    });
 
     matureJob();
     worker.drain();
-    expect(jobStatus(storage, 'evt-1')).toEqual({ status: 'failed', attempts: 3 });
+    expect(jobStatus(storage, 'evt-1')).toEqual({
+      status: 'failed',
+      attempts: 3,
+    });
   });
 });
