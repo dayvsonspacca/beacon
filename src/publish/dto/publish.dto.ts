@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsObject, IsString } from 'class-validator';
 
 export class PublishDto {
   @IsString()
@@ -8,4 +8,14 @@ export class PublishDto {
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   )
   topic: string;
+
+  @IsString()
+  @IsNotEmpty()
+  source: string;
+
+  @IsObject()
+  data: Record<string, any>;
+
+  @IsBoolean()
+  persist: boolean = false;
 }
