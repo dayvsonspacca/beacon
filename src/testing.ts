@@ -1,6 +1,6 @@
-import { EventPayload } from '../events/event-payload';
-import { JobStatus } from './jobs.repository';
-import { StorageService } from './storage.service';
+import { EventPayload } from './events/event-payload';
+import { JobStatus } from './storage/jobs.repository';
+import { StorageService } from './storage/storage.service';
 
 export function createInMemoryStorage(): StorageService {
   process.env.BEACON_DB_PATH = ':memory:';

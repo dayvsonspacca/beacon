@@ -2,6 +2,7 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { databasePath } from '../config';
 
 @Injectable()
 export class StorageService implements OnModuleDestroy {
@@ -9,7 +10,7 @@ export class StorageService implements OnModuleDestroy {
   readonly db: DatabaseSync;
 
   constructor() {
-    const path = process.env.BEACON_DB_PATH ?? 'data/beacon.db';
+    const path = databasePath();
     if (path !== ':memory:') {
       mkdirSync(dirname(path), { recursive: true });
     }

@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { Injectable, Logger } from '@nestjs/common';
 import { parse } from 'smol-toml';
+import { clientsConfigPath } from '../config';
 
 export interface BeaconClient {
   source: string;
@@ -13,7 +14,7 @@ export class ClientsService {
   private readonly byToken = new Map<string, BeaconClient>();
 
   constructor() {
-    const path = process.env.BEACON_CONFIG_PATH ?? 'beacon.toml';
+    const path = clientsConfigPath();
     if (!existsSync(path)) {
       throw new Error(
         `${path} not found — beacon requires a client config; copy beacon.toml.example and set your tokens`,

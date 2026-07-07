@@ -1,5 +1,5 @@
 import { StorageService } from './storage.service';
-import { createInMemoryStorage } from './testing';
+import { createInMemoryStorage } from '../testing';
 
 describe('StorageService', () => {
   let service: StorageService;

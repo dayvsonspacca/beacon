@@ -9,7 +9,8 @@ export class SubscribeController {
 
   @Sse()
   subscribe(@Query('topic') topic?: string): Observable<MessageEvent> {
-    const pattern = normalizeTopic(topic ?? '') || '**';
+    // empty filter -> undefined -> the stream's catch-all default
+    const pattern = normalizeTopic(topic ?? '') || undefined;
     return this.events
       .stream(pattern)
       .pipe(map((event) => ({ type: event.topic, data: event })));

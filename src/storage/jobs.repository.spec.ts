@@ -1,6 +1,6 @@
 import { JobsRepository } from './jobs.repository';
 import { StorageService } from './storage.service';
-import { createInMemoryStorage, jobStatus, payloadOf } from './testing';
+import { createInMemoryStorage, jobStatus, payloadOf } from '../testing';
 
 describe('JobsRepository', () => {
   let storage: StorageService;
@@ -17,7 +17,7 @@ describe('JobsRepository', () => {
 
   it('inserts a job as queued with serialized payload', () => {
     const payload = payloadOf({ data: { id: 1 } });
-    repository.insert({ id: 'evt-1', topic: payload.topic, payload });
+    repository.insert({ id: 'evt-1', payload });
 
     const row = storage.db
       .prepare('SELECT * FROM jobs WHERE id = ?')
@@ -29,7 +29,7 @@ describe('JobsRepository', () => {
   });
 
   it('rejects duplicate ids', () => {
-    const job = { id: 'evt-1', topic: 'a', payload: payloadOf() };
+    const job = { id: 'evt-1', payload: payloadOf() };
     repository.insert(job);
 
     expect(() => repository.insert(job)).toThrow(/UNIQUE/);
@@ -37,22 +37,22 @@ describe('JobsRepository', () => {
 
   describe('claimNext', () => {
     it('claims the oldest queued job, marking it processing', () => {
-      repository.insert({ id: 'evt-1', topic: 'a', payload: payloadOf() });
-      repository.insert({ id: 'evt-2', topic: 'b', payload: payloadOf() });
+      repository.insert({ id: 'evt-1', payload: payloadOf({ topic: 'a' }) });
+      repository.insert({ id: 'evt-2', payload: payloadOf({ topic: 'b' }) });
 
       const job = repository.claimNext();
 
       expect(job).toMatchObject({
         id: 'evt-1',
         topic: 'a',
-        payload: payloadOf(),
+        payload: payloadOf({ topic: 'a' }),
         status: 'processing',
         attempts: 1,
       });
     });
 
     it('does not claim the same job twice', () => {
-      repository.insert({ id: 'evt-1', topic: 'a', payload: payloadOf() });
+      repository.insert({ id: 'evt-1', payload: payloadOf({ topic: 'a' }) });
 
       expect(repository.claimNext()?.id).toBe('evt-1');
       expect(repository.claimNext()).toBeUndefined();
@@ -65,7 +65,7 @@ describe('JobsRepository', () => {
 
   describe('status transitions', () => {
     beforeEach(() => {
-      repository.insert({ id: 'evt-1', topic: 'a', payload: payloadOf() });
+      repository.insert({ id: 'evt-1', payload: payloadOf({ topic: 'a' }) });
       repository.claimNext();
     });
 

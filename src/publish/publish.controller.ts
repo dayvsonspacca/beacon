@@ -15,8 +15,7 @@ export class PublishController {
     const eventId = randomUUID();
     this.jobs.insert({
       id: eventId,
-      topic: body.topic,
-      payload: { topic: body.topic, source: client.source, data: body.data },
+      payload: { ...body, source: client.source },
     });
     return { eventId, status: 'queued' };
   }

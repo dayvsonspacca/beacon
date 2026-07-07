@@ -1,11 +1,7 @@
 import { BeaconEvent, EventsService } from '../events/events.service';
 import { JobsRepository } from '../storage/jobs.repository';
 import { StorageService } from '../storage/storage.service';
-import {
-  createInMemoryStorage,
-  jobStatus,
-  payloadOf,
-} from '../storage/testing';
+import { createInMemoryStorage, jobStatus, payloadOf } from '../testing';
 import { QueueWorker } from './queue.worker';
 
 describe('QueueWorker', () => {
@@ -26,8 +22,8 @@ describe('QueueWorker', () => {
   });
 
   it('drains queued jobs and marks them done', () => {
-    repository.insert({ id: 'evt-1', topic: 'a', payload: payloadOf() });
-    repository.insert({ id: 'evt-2', topic: 'b', payload: payloadOf() });
+    repository.insert({ id: 'evt-1', payload: payloadOf({ topic: 'a' }) });
+    repository.insert({ id: 'evt-2', payload: payloadOf({ topic: 'b' }) });
 
     worker.drain();
 
@@ -46,14 +42,14 @@ describe('QueueWorker', () => {
     events.stream('orders.*').subscribe((event) => received.push(event));
 
     const payload = payloadOf({ data: { orderId: 1 } });
-    repository.insert({ id: 'evt-1', topic: payload.topic, payload });
+    repository.insert({ id: 'evt-1', payload });
     worker.drain();
 
     expect(received).toEqual([{ eventId: 'evt-1', ...payload }]);
   });
 
   it('requeues a failing job with backoff and marks it failed after max attempts', () => {
-    repository.insert({ id: 'evt-1', topic: 'a', payload: payloadOf() });
+    repository.insert({ id: 'evt-1', payload: payloadOf({ topic: 'a' }) });
     jest
       .spyOn(
         worker as unknown as { process: (job: unknown) => void },

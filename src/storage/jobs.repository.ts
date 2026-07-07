@@ -6,11 +6,11 @@ export type JobStatus = 'queued' | 'processing' | 'done' | 'failed';
 
 export interface NewJob {
   id: string;
-  topic: string;
   payload: EventPayload;
 }
 
 export interface Job extends NewJob {
+  topic: string;
   status: JobStatus;
   attempts: number;
   createdAt: string;
@@ -34,7 +34,7 @@ export class JobsRepository {
   insert(job: NewJob): void {
     this.storage.db
       .prepare('INSERT INTO jobs (id, topic, payload) VALUES (?, ?, ?)')
-      .run(job.id, job.topic, JSON.stringify(job.payload));
+      .run(job.id, job.payload.topic, JSON.stringify(job.payload));
   }
 
   claimNext(): Job | undefined {
