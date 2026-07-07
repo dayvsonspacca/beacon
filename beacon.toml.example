@@ -1,0 +1,16 @@
+# beacon authentication config (REQUIRED)
+#
+# Copy to beacon.toml (or set BEACON_CONFIG_PATH) and list one [[clients]]
+# entry per project that talks to this beacon instance.
+# The app refuses to boot without it.
+#
+# source: identifies the client; its published events carry it as "source"
+# token:  shared secret sent as "Authorization: Bearer <token>"
+
+[[clients]]
+source = "blog"
+token = "btk_change-me-1"
+
+[[clients]]
+source = "checkout"
+token = "btk_change-me-2"
