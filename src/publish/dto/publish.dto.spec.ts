@@ -4,7 +4,6 @@ import { PublishDto } from './publish.dto';
 
 const validPayload = {
   topic: 'orders',
-  source: 'api',
   data: { id: 1 },
 };
 
@@ -22,14 +21,12 @@ function constraintsOf(
 }
 
 describe('PublishDto', () => {
-  it('accepts a valid payload and defaults persist to false', async () => {
+  it('accepts a valid payload', async () => {
     const { dto, errors } = await validatePayload(validPayload);
 
     expect(errors).toHaveLength(0);
     expect(dto.topic).toBe('orders');
-    expect(dto.source).toBe('api');
     expect(dto.data).toEqual({ id: 1 });
-    expect(dto.persist).toBe(false);
   });
 
   describe('topic', () => {
@@ -65,31 +62,6 @@ describe('PublishDto', () => {
     });
   });
 
-  describe('source', () => {
-    it('rejects empty value', async () => {
-      const { errors } = await validatePayload({ ...validPayload, source: '' });
-
-      expect(constraintsOf(errors, 'source')).toHaveProperty('isNotEmpty');
-    });
-
-    it('rejects missing value', async () => {
-      const { source: _source, ...payload } = validPayload;
-      const { errors } = await validatePayload(payload);
-
-      expect(constraintsOf(errors, 'source')).toHaveProperty('isNotEmpty');
-      expect(constraintsOf(errors, 'source')).toHaveProperty('isString');
-    });
-
-    it('rejects non-string value', async () => {
-      const { errors } = await validatePayload({
-        ...validPayload,
-        source: 123,
-      });
-
-      expect(constraintsOf(errors, 'source')).toHaveProperty('isString');
-    });
-  });
-
   describe('data', () => {
     it('accepts any object shape', async () => {
       const { dto, errors } = await validatePayload({
@@ -113,27 +85,6 @@ describe('PublishDto', () => {
         const { errors } = await validatePayload({ ...validPayload, data });
         expect(constraintsOf(errors, 'data')).toHaveProperty('isObject');
       }
-    });
-  });
-
-  describe('persist', () => {
-    it('accepts explicit true', async () => {
-      const { dto, errors } = await validatePayload({
-        ...validPayload,
-        persist: true,
-      });
-
-      expect(errors).toHaveLength(0);
-      expect(dto.persist).toBe(true);
-    });
-
-    it('rejects non-boolean value', async () => {
-      const { errors } = await validatePayload({
-        ...validPayload,
-        persist: 'yes',
-      });
-
-      expect(constraintsOf(errors, 'persist')).toHaveProperty('isBoolean');
     });
   });
 });

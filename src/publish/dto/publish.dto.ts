@@ -1,9 +1,8 @@
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsObject, IsString } from 'class-validator';
-import { EventPayload } from '../../events/event-payload';
+import { IsNotEmpty, IsObject, IsString } from 'class-validator';
 import { normalizeTopic } from '../../events/topics';
 
-export class PublishDto implements EventPayload {
+export class PublishDto {
   @IsString()
   @IsNotEmpty()
   @Transform(({ value }: { value: unknown }) =>
@@ -11,13 +10,6 @@ export class PublishDto implements EventPayload {
   )
   topic: string;
 
-  @IsString()
-  @IsNotEmpty()
-  source: string;
-
   @IsObject()
   data: Record<string, any>;
-
-  @IsBoolean()
-  persist: boolean = false;
 }

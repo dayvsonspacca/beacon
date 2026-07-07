@@ -16,7 +16,6 @@ export function payloadOf(overrides: Partial<EventPayload> = {}): EventPayload {
     topic: 'orders.created',
     source: 'api',
     data: {},
-    persist: false,
     ...overrides,
   };
 }
