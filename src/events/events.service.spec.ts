@@ -1,3 +1,4 @@
+import { eventOf } from '../testing';
 import { EventsService } from './events.service';
 import { matchesTopic, normalizeTopic } from './topics';
 
@@ -32,10 +33,9 @@ describe('EventsService', () => {
       .stream('orders.*')
       .subscribe((event) => received.push(event.topic));
 
-    const base = { eventId: 'e', source: 's', data: {} };
-    service.emit({ ...base, topic: 'orders.created' });
-    service.emit({ ...base, topic: 'users.registered' });
-    service.emit({ ...base, topic: 'orders.shipped' });
+    service.emit(eventOf({ topic: 'orders.created' }));
+    service.emit(eventOf({ topic: 'users.registered' }));
+    service.emit(eventOf({ topic: 'orders.shipped' }));
 
     subscription.unsubscribe();
     expect(received).toEqual(['orders.created', 'orders.shipped']);

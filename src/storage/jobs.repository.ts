@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { EventPayload } from '../events/event-payload';
+import { EventPayload } from '../events/event';
 import { matchesTopic } from '../events/topics';
 import { StorageService } from './storage.service';
 

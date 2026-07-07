@@ -1,4 +1,5 @@
-import { BeaconEvent, EventsService } from '../events/events.service';
+import { BeaconEvent } from '../events/event';
+import { EventsService } from '../events/events.service';
 import { JobsRepository } from '../storage/jobs.repository';
 import { StorageService } from '../storage/storage.service';
 import { createInMemoryStorage, jobStatus, payloadOf } from '../testing';

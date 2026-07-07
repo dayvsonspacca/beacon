@@ -4,6 +4,7 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
+import { BeaconEvent } from '../events/event';
 import { EventsService } from '../events/events.service';
 import { Job, JobsRepository } from '../storage/jobs.repository';
 
@@ -54,7 +55,7 @@ export class QueueWorker implements OnModuleInit, OnModuleDestroy {
   }
 
   private process(job: Job): void {
-    this.events.emit({ eventId: job.id, ...job.payload });
+    this.events.emit(BeaconEvent.from(job));
     this.logger.log(`delivered ${job.id} (topic=${job.topic})`);
   }
 }

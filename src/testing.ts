@@ -1,4 +1,4 @@
-import { EventPayload } from './events/event-payload';
+import { BeaconEvent, EventPayload } from './events/event';
 import { JobStatus } from './storage/jobs.repository';
 import { StorageService } from './storage/storage.service';
 
@@ -18,6 +18,10 @@ export function payloadOf(overrides: Partial<EventPayload> = {}): EventPayload {
     data: {},
     ...overrides,
   };
+}
+
+export function eventOf(overrides: Partial<BeaconEvent> = {}): BeaconEvent {
+  return { eventId: 'evt-1', ...payloadOf(), ...overrides };
 }
 
 export function jobStatus(

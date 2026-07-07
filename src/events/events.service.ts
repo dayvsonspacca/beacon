@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { filter, Observable, Subject } from 'rxjs';
-import { EventPayload } from './event-payload';
+import { BeaconEvent } from './event';
 import { matchesTopic } from './topics';
-
-export interface BeaconEvent extends EventPayload {
-  eventId: string;
-}
 
 @Injectable()
 export class EventsService {

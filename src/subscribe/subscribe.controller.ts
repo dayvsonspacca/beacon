@@ -15,7 +15,8 @@ import {
   Observable,
   ReplaySubject,
 } from 'rxjs';
-import { BeaconEvent, EventsService } from '../events/events.service';
+import { BeaconEvent } from '../events/event';
+import { EventsService } from '../events/events.service';
 import { normalizeTopic } from '../events/topics';
 import { JobsRepository } from '../storage/jobs.repository';
 
@@ -50,17 +51,14 @@ export class SubscribeController {
    * so nothing published in between is lost; the overlap is deduplicated
    * by eventId.
    */
-  private withBacklog(
-    pattern: string,
-    limit: number,
-  ): Observable<BeaconEvent> {
+  private withBacklog(pattern: string, limit: number): Observable<BeaconEvent> {
     return defer(() => {
       const live = new ReplaySubject<BeaconEvent>();
       const liveSubscription = this.events.stream(pattern).subscribe(live);
 
       const backlog = this.jobs
         .findLastDelivered(pattern, limit)
-        .map((job) => ({ eventId: job.id, ...job.payload }));
+        .map((job) => BeaconEvent.from(job));
       const replayed = new Set(backlog.map((event) => event.eventId));
 
       return concat(

@@ -68,9 +68,7 @@ describe('JobsRepository', () => {
       repository.insert({ id, payload: payloadOf({ topic }) });
       // spread created_at apart so ordering is deterministic
       storage.db
-        .prepare(
-          "UPDATE jobs SET status = 'done', created_at = ? WHERE id = ?",
-        )
+        .prepare("UPDATE jobs SET status = 'done', created_at = ? WHERE id = ?")
         .run(`2026-07-07T00:00:0${id.slice(-1)}.000Z`, id);
     }
 
