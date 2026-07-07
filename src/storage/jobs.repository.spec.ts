@@ -63,6 +63,60 @@ describe('JobsRepository', () => {
     });
   });
 
+  describe('findLastDelivered', () => {
+    function deliver(id: string, topic: string) {
+      repository.insert({ id, payload: payloadOf({ topic }) });
+      // spread created_at apart so ordering is deterministic
+      storage.db
+        .prepare(
+          "UPDATE jobs SET status = 'done', created_at = ? WHERE id = ?",
+        )
+        .run(`2026-07-07T00:00:0${id.slice(-1)}.000Z`, id);
+    }
+
+    beforeEach(() => {
+      deliver('evt-1', 'orders.created');
+      deliver('evt-2', 'orders.shipped');
+      deliver('evt-3', 'users.registered');
+      deliver('evt-4', 'orders.created');
+    });
+
+    it('returns the newest matching events, oldest first', () => {
+      const jobs = repository.findLastDelivered('orders.created', 2);
+
+      expect(jobs.map((j) => j.id)).toEqual(['evt-1', 'evt-4']);
+    });
+
+    it('respects the limit', () => {
+      const jobs = repository.findLastDelivered('orders.created', 1);
+
+      expect(jobs.map((j) => j.id)).toEqual(['evt-4']);
+    });
+
+    it('matches wildcard patterns', () => {
+      const jobs = repository.findLastDelivered('orders.*', 10);
+
+      expect(jobs.map((j) => j.id)).toEqual(['evt-1', 'evt-2', 'evt-4']);
+    });
+
+    it('matches everything with the catch-all pattern', () => {
+      const jobs = repository.findLastDelivered('**', 2);
+
+      expect(jobs.map((j) => j.id)).toEqual(['evt-3', 'evt-4']);
+    });
+
+    it('ignores jobs that were not delivered', () => {
+      repository.insert({
+        id: 'evt-9',
+        payload: payloadOf({ topic: 'orders.created' }),
+      });
+
+      const jobs = repository.findLastDelivered('orders.created', 10);
+
+      expect(jobs.map((j) => j.id)).toEqual(['evt-1', 'evt-4']);
+    });
+  });
+
   describe('status transitions', () => {
     beforeEach(() => {
       repository.insert({ id: 'evt-1', payload: payloadOf({ topic: 'a' }) });

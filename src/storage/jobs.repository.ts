@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EventPayload } from '../events/event-payload';
+import { matchesTopic } from '../events/topics';
 import { StorageService } from './storage.service';
 
 export type JobStatus = 'queued' | 'processing' | 'done' | 'failed';
@@ -27,6 +28,13 @@ interface JobRow {
 
 const NOW_UTC = "strftime('%Y-%m-%dT%H:%M:%fZ', 'now')";
 
+function toNewJob(row: Pick<JobRow, 'id' | 'payload'>): NewJob {
+  return {
+    id: row.id,
+    payload: JSON.parse(row.payload) as EventPayload,
+  };
+}
+
 @Injectable()
 export class JobsRepository {
   constructor(private readonly storage: StorageService) {}
@@ -35,6 +43,37 @@ export class JobsRepository {
     this.storage.db
       .prepare('INSERT INTO jobs (id, topic, payload) VALUES (?, ?, ?)')
       .run(job.id, job.payload.topic, JSON.stringify(job.payload));
+  }
+
+  /** The last `limit` delivered events matching `pattern`, oldest first. */
+  findLastDelivered(pattern: string, limit: number): NewJob[] {
+    const newest: NewJob[] = [];
+
+    if (!pattern.includes('*')) {
+      const rows = this.storage.db
+        .prepare(
+          `SELECT id, payload FROM jobs
+           WHERE status = 'done' AND topic = ?
+           ORDER BY created_at DESC, id DESC LIMIT ?`,
+        )
+        .all(pattern, limit) as unknown as JobRow[];
+      newest.push(...rows.map(toNewJob));
+    } else {
+      const rows = this.storage.db
+        .prepare(
+          `SELECT id, topic, payload FROM jobs
+           WHERE status = 'done'
+           ORDER BY created_at DESC, id DESC`,
+        )
+        .iterate() as IterableIterator<JobRow>;
+      for (const row of rows) {
+        if (!matchesTopic(row.topic, pattern)) continue;
+        newest.push(toNewJob(row));
+        if (newest.length === limit) break;
+      }
+    }
+
+    return newest.reverse();
   }
 
   claimNext(): Job | undefined {
