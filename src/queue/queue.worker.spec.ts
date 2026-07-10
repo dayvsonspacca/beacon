@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, spyOn } from 'bun:test';
 import { BeaconEvent } from '../events/event';
 import { EventsService } from '../events/events.service';
 import { JobsRepository } from '../storage/jobs.repository';
@@ -51,14 +52,9 @@ describe('QueueWorker', () => {
 
   it('requeues a failing job with backoff and marks it failed after max attempts', () => {
     repository.insert({ id: 'evt-1', payload: payloadOf({ topic: 'a' }) });
-    jest
-      .spyOn(
-        worker as unknown as { process: (job: unknown) => void },
-        'process',
-      )
-      .mockImplementation(() => {
-        throw new Error('boom');
-      });
+    spyOn(worker, 'process').mockImplementation(() => {
+      throw new Error('boom');
+    });
 
     const matureJob = () =>
       storage.db

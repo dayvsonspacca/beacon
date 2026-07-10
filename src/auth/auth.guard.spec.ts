@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'bun:test';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard, AuthenticatedRequest } from './auth.guard';
 import { BeaconClient, ClientsService } from './clients.service';
