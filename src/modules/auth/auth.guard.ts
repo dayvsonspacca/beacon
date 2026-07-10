@@ -5,25 +5,26 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request } from 'express';
-import { BeaconClient, ClientsService } from './clients.service';
+import { Source } from '../../core/source';
+import { SourceService } from './source.service';
 
-export type AuthenticatedRequest = Request & { client?: BeaconClient };
+export type AuthenticatedRequest = Request & { source?: Source };
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly clients: ClientsService) {}
+  constructor(private readonly sources: SourceService) {}
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const header = request.headers.authorization;
     const token = header?.startsWith('Bearer ') ? header.slice(7) : undefined;
-    const client = token ? this.clients.findByToken(token) : undefined;
+    const source = token ? this.sources.findByToken(token) : undefined;
 
-    if (!client) {
+    if (!source) {
       throw new UnauthorizedException('invalid or missing bearer token');
     }
 
-    request.client = client;
+    request.source = source;
     return true;
   }
 }

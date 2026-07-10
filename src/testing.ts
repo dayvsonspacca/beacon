@@ -1,14 +1,17 @@
-import { BeaconEvent, EventPayload } from './modules/events/event';
+import { Event } from './core/event';
+import { Source } from './core/source';
+import { Topic } from './core/topic';
 
-export function payloadOf(overrides: Partial<EventPayload> = {}): EventPayload {
-  return {
-    topic: 'orders.created',
-    source: 'api',
-    data: {},
-    ...overrides,
-  };
+interface EventOverrides {
+  topic?: string;
+  source?: string;
+  data?: object;
 }
 
-export function eventOf(overrides: Partial<BeaconEvent> = {}): BeaconEvent {
-  return { eventId: 'evt-1', ...payloadOf(), ...overrides };
+export function eventOf(overrides: EventOverrides = {}): Event {
+  return Event.of(
+    Topic.of(overrides.topic ?? 'orders.created'),
+    Source.of(overrides.source ?? 'api'),
+    overrides.data ?? {},
+  );
 }

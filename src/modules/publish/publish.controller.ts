@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import {
   Body,
   Controller,
@@ -7,10 +6,11 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { Event } from '../../core/event';
+import { Source } from '../../core/source';
+import { Topic } from '../../core/topic';
 import { AuthGuard } from '../auth/auth.guard';
-import type { BeaconClient } from '../auth/clients.service';
-import { CurrentClient } from '../auth/current-client.decorator';
-import { BeaconEvent } from '../events/event';
+import { CurrentSource } from '../auth/current-source.decorator';
 import { EventsService } from '../events/events.service';
 import { PublishDto } from './dto/publish.dto';
 
@@ -21,11 +21,9 @@ export class PublishController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
-  publish(@Body() body: PublishDto, @CurrentClient() client: BeaconClient) {
-    const eventId = randomUUID();
-    this.events.emit(
-      BeaconEvent.of(eventId, { ...body, source: client.source }),
-    );
-    return { eventId, status: 'published' };
+  publish(@Body() body: PublishDto, @CurrentSource() source: Source) {
+    const event = Event.of(Topic.of(body.topic), source, body.data);
+    this.events.emit(event);
+    return { eventId: event.id, status: 'published' };
   }
 }
