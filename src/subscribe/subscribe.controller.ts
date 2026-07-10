@@ -1,9 +1,17 @@
-import { Controller, MessageEvent, Query, Sse } from '@nestjs/common';
+import {
+  Controller,
+  MessageEvent,
+  Query,
+  Sse,
+  UseGuards,
+} from '@nestjs/common';
 import { map, Observable } from 'rxjs';
+import { AuthGuard } from '../auth/auth.guard';
 import { EventsService } from '../events/events.service';
 import { normalizeTopic } from '../events/topics';
 
 @Controller('subscribe')
+@UseGuards(AuthGuard)
 export class SubscribeController {
   constructor(private readonly events: EventsService) {}
 
