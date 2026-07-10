@@ -1,4 +1,4 @@
-import { BeaconEvent, EventPayload } from './events/event';
+import { BeaconEvent, EventPayload } from './modules/events/event';
 
 export function payloadOf(overrides: Partial<EventPayload> = {}): EventPayload {
   return {

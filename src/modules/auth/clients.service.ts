@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { Injectable, Logger } from '@nestjs/common';
 import { parse } from 'smol-toml';
-import { clientsConfigPath } from '../config';
+import { clientsConfigPath } from '../../config';
 
 export interface BeaconClient {
   source: string;

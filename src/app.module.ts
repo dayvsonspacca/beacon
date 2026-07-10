@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { HealthController } from './health/health.controller';
-import { PublishModule } from './publish/publish.module';
-import { SubscribeModule } from './subscribe/subscribe.module';
+import { PublishModule } from './modules/publish/publish.module';
+import { SubscribeModule } from './modules/subscribe/subscribe.module';
 
 @Module({
   imports: [AuthModule, PublishModule, SubscribeModule],
