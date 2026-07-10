@@ -1,0 +1,9 @@
+# Clients used by the e2e suite (test/e2e.spec.ts) — not real credentials.
+
+[[clients]]
+source = "e2e-publisher"
+token = "btk_e2e_publisher"
+
+[[clients]]
+source = "e2e-subscriber"
+token = "btk_e2e_subscriber"

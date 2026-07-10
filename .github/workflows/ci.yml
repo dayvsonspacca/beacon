@@ -23,3 +23,15 @@ jobs:
 
       - name: Test
         run: bun test src
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: E2E (Docker image)
+        run: ./scripts/e2e.sh
