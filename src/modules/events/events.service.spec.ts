@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { eventOf } from '../testing';
+import { eventOf } from '../../testing';
 import { EventsService } from './events.service';
 import { matchesTopic, normalizeTopic } from './topics';
 
