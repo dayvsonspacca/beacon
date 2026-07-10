@@ -2,9 +2,9 @@ import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ClientsService } from './clients.service';
+import { SourceService } from './source.service';
 
-describe('ClientsService', () => {
+describe('SourceService', () => {
   let dir: string;
 
   beforeEach(() => {
@@ -16,20 +16,22 @@ describe('ClientsService', () => {
     delete process.env.BEACON_CONFIG_PATH;
   });
 
-  function withConfig(toml: string): ClientsService {
+  function withConfig(toml: string): SourceService {
     const path = join(dir, 'beacon.toml');
     writeFileSync(path, toml);
     process.env.BEACON_CONFIG_PATH = path;
-    return new ClientsService();
+    const service = new SourceService();
+    service.onModuleInit();
+    return service;
   }
 
   it('refuses to boot without a config file', () => {
     process.env.BEACON_CONFIG_PATH = join(dir, 'missing.toml');
 
-    expect(() => new ClientsService()).toThrow(/not found/);
+    expect(() => new SourceService().onModuleInit()).toThrow(/not found/);
   });
 
-  it('loads clients and finds them by token', () => {
+  it('loads sources and finds them by token', () => {
     const service = withConfig(`
       [[clients]]
       source = "blog"
@@ -40,10 +42,7 @@ describe('ClientsService', () => {
       token = "btk_2"
     `);
 
-    expect(service.findByToken('btk_1')).toEqual({
-      source: 'blog',
-      token: 'btk_1',
-    });
+    expect(service.findByToken('btk_1')?.id).toBe('blog');
     expect(service.findByToken('btk_unknown')).toBeUndefined();
   });
 

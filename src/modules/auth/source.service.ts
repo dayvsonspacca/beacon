@@ -1,19 +1,15 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { parse } from 'smol-toml';
 import { clientsConfigPath } from '../../config';
-
-export interface BeaconClient {
-  source: string;
-  token: string;
-}
+import { Source } from '../../core/source';
 
 @Injectable()
-export class ClientsService {
-  private readonly logger = new Logger(ClientsService.name);
-  private readonly byToken = new Map<string, BeaconClient>();
+export class SourceService implements OnModuleInit {
+  private readonly logger = new Logger(SourceService.name);
+  private readonly byToken = new Map<string, Source>();
 
-  constructor() {
+  onModuleInit() {
     const path = clientsConfigPath();
     if (!existsSync(path)) {
       throw new Error(
@@ -21,17 +17,17 @@ export class ClientsService {
       );
     }
 
-    for (const client of this.parseClients(path)) {
-      this.byToken.set(client.token, client);
+    for (const [token, source] of this.parseSources(path)) {
+      this.byToken.set(token, source);
     }
-    this.logger.log(`authentication enabled (${this.byToken.size} clients)`);
+    this.logger.log(`authentication enabled (${this.byToken.size} sources)`);
   }
 
-  findByToken(token: string): BeaconClient | undefined {
+  findByToken(token: string): Source | undefined {
     return this.byToken.get(token);
   }
 
-  private parseClients(path: string): BeaconClient[] {
+  private parseSources(path: string): Array<[token: string, source: Source]> {
     const config = parse(readFileSync(path, 'utf8'));
     const clients = config.clients;
     if (!Array.isArray(clients) || clients.length === 0) {
@@ -56,7 +52,7 @@ export class ClientsService {
       }
       sources.add(source);
       tokens.add(token);
-      return { source, token };
+      return [token, Source.of(source)];
     });
   }
 }
