@@ -17,7 +17,7 @@ export class BeaconEvent implements EventPayload {
     this.data = payload.data;
   }
 
-  static from(job: { id: string; payload: EventPayload }): BeaconEvent {
-    return new BeaconEvent(job.id, job.payload);
+  static of(eventId: string, payload: EventPayload): BeaconEvent {
+    return new BeaconEvent(eventId, payload);
   }
 }
